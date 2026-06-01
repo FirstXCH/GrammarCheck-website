@@ -1,37 +1,55 @@
-import sys
-sys.stdout.reconfigure(encoding='utf-8')
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 import asyncio
 from googletrans import Translator
 import language_tool_python
 
-text_add = "I swimming in a pool"
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
-# -----------------------------------------
-# 1. สร้างฟังก์ชันสำหรับการแปลภาษา (ใช้ async ตามเวอร์ชันของคุณ)
-# -----------------------------------------
+app = FastAPI()
+
+class TextInput(BaseModel):
+    text: str
+
+
 async def get_translation(text):
     async with Translator() as translator:
         # ต้องมีคำว่า await เพื่อรอให้มันแปลเสร็จก่อน
         result = await translator.translate(text, dest='th')
         return result.text
 
-# รันฟังก์ชันแปลภาษา
-translated_text = asyncio.run(get_translation(text_add))
-
-print(f"\nประโยคต้นฉบับ: {text_add}")
-print(f"คำแปล: {translated_text}")
-print("-" * 30)
-
-# -----------------------------------------
-# 2. ส่วนตรวจ Grammar (ทำงานแบบปกติ)
-# -----------------------------------------
 tool = language_tool_python.LanguageTool('en-US')
-matches = tool.check(text_add)
 
-for m in matches:
-    print(f"ตำแหน่งที่ผิด (offset): {m.offset} ถึง (error_length): {m.error_length}")
-    print(f"คำที่แนะนำ (replacements): {m.replacements}")
-    print(f"เหตุผล (message): {m.message}")
-    print("-" * 30)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/")
+async def serve_frontend():
+    return FileResponse("index.html")
+
+@app.post("/check-grammar")
+async def check_grammar_and_translate(input_data:TextInput):
+    user_text = input_data.text
+
+    translated_text = await get_translation(user_text)
+
+    matches = tool.check(user_text)
+
+    grammar_errors = []
+    for m in matches:
+        grammar_errors.append({
+            "offset": m.offset,
+            "error_length": m.error_length,
+            "replacements": m.replacements,
+            "message": m.message
+        })
+    return {
+        "original_text": user_text,
+        "translated_text": translated_text,
+        "grammar_errors": grammar_errors
+    }
 
