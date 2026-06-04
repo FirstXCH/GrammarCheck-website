@@ -1,98 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
+
 /* ไฟล์ static/style.css */
+:root {
+  --bg-color: #f0f4f8;
+  --text-color: #334155;
+  --box-bg: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #cbd5e1;
+  --btn-bg: #6366f1;
+  --btn-hover: #4f46e5;
+  --highlight-bg: #fce8e6;
+  --wrong-word: #ef4444;
+  --correct-word: #10b981;
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --text-color: #f1f5f9;
+  --box-bg: #1e293b;
+  --card-bg: #1e293b;
+  --border-color: #334155;
+  --btn-bg: #6366f1;
+  --btn-hover: #4f46e5;
+  --highlight-bg: #451a1a;
+  --wrong-word: #f87171;
+  --correct-word: #34d399;
+}
+
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Prompt", "Segoe UI", Tahoma, sans-serif;
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
 }
-textarea {
+
+/* Editor Container */
+.editor-container {
+  position: relative;
   width: 100%;
-  height: 100px;
-  padding: 10px;
-  font-size: 16px;
+  height: 150px;
   margin-bottom: 10px;
 }
+
+/* Base styles for both textarea and highlights to sync perfectly */
+.editor-container textarea,
+.editor-container .backdrop {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-family: "Prompt", "Segoe UI", Tahoma, sans-serif;
+  line-height: 1.5;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.editor-container textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: transparent; 
+  color: var(--text-color);
+  resize: none;
+  z-index: 2;
+}
+
+.editor-container .backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--card-bg);
+  color: transparent; 
+  overflow: hidden; 
+  z-index: 1;
+  transition: background-color 0.3s;
+}
+
+/* Highlighted words */
+mark {
+  background-color: var(--highlight-bg);
+  border-bottom: 2px solid var(--wrong-word);
+  color: transparent;
+  border-radius: 2px;
+}
+
+/* Floating Buttons */
+.floating-buttons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+}
+
+.icon-btn {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-left: 5px;
+  transition: 0.2s;
+}
+.icon-btn:hover {
+  background-color: var(--box-bg);
+}
+
 button {
   padding: 10px 20px;
   font-size: 16px;
-  background-color: #007bff;
+  background-color: var(--btn-bg);
   color: white;
   border: none;
   cursor: pointer;
   border-radius: 5px;
+  transition: 0.2s;
 }
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--btn-hover);
 }
+
 .result-box {
   margin-top: 20px;
   padding: 15px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 5px;
-  background-color: #f9f9f9;
+  background-color: var(--box-bg);
+  transition: 0.3s;
 }
-/* คอนเทนเนอร์ใส่การ์ด */
+
 .cards-container {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* ระยะห่างระหว่างการ์ด */
+  gap: 15px;
   margin-top: 10px;
 }
 
-/* ดีไซน์ของการ์ดแต่ละใบ */
 .error-card {
-  background-color: white;
-  border: 1px solid #e0e0e0;
+  background-color: var(--card-bg);
+  border: none;
+  border-left: 4px solid var(--wrong-word);
   border-radius: 8px;
   padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 .error-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-/* หัวข้อของการ์ด (เช่น บอกเหตุผลที่ผิด) */
 .card-header {
   font-size: 14px;
-  color: #d93025; /* สีแดงแบบแจ้งเตือน */
+  color: var(--wrong-word);
   font-weight: bold;
   margin-bottom: 10px;
 }
 
-/* ส่วนแสดงคำผิดและคำถูก */
 .card-body {
   font-size: 16px;
   margin-bottom: 15px;
-  background-color: #f8f9fa;
+  background-color: var(--box-bg);
   padding: 10px;
   border-radius: 5px;
 }
 
 .wrong-word {
-  color: #d93025;
-  text-decoration: line-through; /* ขีดฆ่าคำที่ผิด */
+  color: var(--wrong-word);
+  text-decoration: line-through;
   margin-right: 10px;
 }
 
 .correct-word {
-  color: #188038; /* สีเขียวสำหรับคำที่ถูกต้อง */
+  color: var(--correct-word);
   font-weight: bold;
 }
 
-/* ปุ่ม Accept */
+.success-message {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--correct-word);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .accept-btn {
-  background-color: #188038;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--correct-word), #059669);
   color: white;
   border: none;
-  padding: 8px 15px;
-  border-radius: 15px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
 }
 
-.accept-btn:hover {
-  background-color: #13652c;
+/* Theme Toggle & Footer */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: none;
+}
+.theme-toggle:hover {
+  background: none;
+  transform: scale(1.1);
+}
+
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color);
+}
+.footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #24292e;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+  transition: 0.2s;
+}
+.footer-btn:hover {
+  background-color: #1b1f23;
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .footer-btn {
+  background-color: #f0f6fc;
+  color: #24292e;
+}
+[data-theme="dark"] .footer-btn:hover {
+  background-color: #c9d1d9;
+}
+
+.check-btn-v1 {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--btn-bg), #0056b3);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.check-btn-v1:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
 }

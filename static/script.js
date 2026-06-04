@@ -1,3 +1,22 @@
+// Theme Setup
+const currentTheme = localStorage.getItem("theme") || "light";
+document.documentElement.setAttribute("data-theme", currentTheme);
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("themeIcon").innerText =
+    currentTheme === "dark" ? "🌙" : "☀️";
+});
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme");
+  const newTheme = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+  document.getElementById("themeIcon").innerText =
+    newTheme === "dark" ? "🌙" : "☀️";
+}
+
+let currentErrors = [];
+
 async function checkGrammar() {
   const text = document.getElementById("inputText").value;
   if (!text) {
@@ -5,13 +24,12 @@ async function checkGrammar() {
     return;
   }
 
-  // แสดงหน้าโหลด หรือ ล้างข้อมูลเก่า
   document.getElementById("resultArea").style.display = "block";
   document.getElementById("translationResult").innerText = "กำลังประมวลผล...";
   document.getElementById("grammarErrorsList").innerHTML = "";
+  document.getElementById("acceptAllBtn").style.display = "none";
 
   try {
-    // ส่งข้อมูลไปที่ Backend
     const response = await fetch("/check-grammar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -19,61 +37,145 @@ async function checkGrammar() {
     });
 
     const data = await response.json();
-
-    // 1. แสดงคำแปล
     document.getElementById("translationResult").innerText =
       data.translated_text;
 
-    // 2. แสดง Grammar ที่ผิด
-    const errorList = document.getElementById("grammarErrorsList");
-    errorList.innerHTML = ""; // ล้างของเก่า
-
-    if (data.grammar_errors.length === 0) {
-      errorList.innerHTML = "<li>ไม่มีข้อผิดพลาด! เก่งมากครับ 🎉</li>";
-    } else {
-      data.grammar_errors.forEach((err) => {
-        const suggestion =
-          err.replacements.length > 0 ? err.replacements[0] : "ไม่มีคำแนะนำ";
-
-        const wrongText = text.substring(
-          err.offset,
-          err.offset + err.error_length,
-        );
-
-        const card = document.createElement("div");
-        card.classList = "error-card";
-
-        card.innerHTML = `
-            <div class="card-header">💡 ${err.message}</div>
-                    <div class="card-body">
-                        <!-- คำที่ผิด (ขีดฆ่าสีแดง) -->
-                        <span class="wrong-word">${wrongText}</span> 
-                        👉 
-                        <!-- คำที่ถูก (สีเขียว) -->
-                        <span class="correct-word">${suggestion}</span>
-                    </div>
-                    <button class="accept-btn" onclick="applyFix('${suggestion}')">
-                        ✅ Accept
-                    </button>
-          `;
-
-        errorList.appendChild(card);
-      });
-    }
+    currentErrors = data.grammar_errors || [];
+    renderErrors();
+    updateHighlights();
   } catch (error) {
     alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
     console.error(error);
   }
 }
-// ฟังก์ชันสำหรับเวลากดปุ่ม Accept
-function applyFix(suggestedWord) {
-  if (suggestedWord === "ไม่มีคำแนะนำ") return;
 
-  // (ในอนาคตเราสามารถเขียนโค้ดให้มันไปแทนที่คำผิดในประโยคเดิมได้
-  // แต่เบื้องต้น เอาคำที่ถูกไปต่อท้าย หรือแสดงให้ดูก่อนครับ)
-  alert(
-    "คุณยอมรับคำว่า: " +
-      suggestedWord +
-      "\n(เดี๋ยวสเต็ปต่อไปเราจะทำให้มันไปแก้ในช่องพิมพ์ให้อัตโนมัตินะครับ!)",
-  );
+function renderErrors() {
+  const errorList = document.getElementById("grammarErrorsList");
+  const acceptAllBtn = document.getElementById("acceptAllBtn");
+  errorList.innerHTML = "";
+
+  if (currentErrors.length === 0) {
+    errorList.innerHTML = "<div class='success-message'>🎉 ไม่มีข้อผิดพลาด! เก่งมากครับ</div>";
+    acceptAllBtn.style.display = "none";
+  } else {
+    acceptAllBtn.style.display = "block";
+    currentErrors.forEach((err, index) => {
+      const suggestion =
+        err.replacements.length > 0 ? err.replacements[0] : "ไม่มีคำแนะนำ";
+      const wrongText = err.wrong_word || "ข้อความที่ผิด";
+
+      const card = document.createElement("div");
+      card.classList = "error-card";
+      card.innerHTML = `
+          <div class="card-header">💡 ${err.message}</div>
+          <div class="card-body">
+              <span class="wrong-word">${wrongText}</span> 👉 <span class="correct-word">${suggestion}</span>
+          </div>
+          <button class="accept-btn" onclick="applyFix(${index})">
+              ✅ Accept
+          </button>
+      `;
+      errorList.appendChild(card);
+    });
+  }
+}
+
+function applyFix(index) {
+  const err = currentErrors[index];
+  if (!err) return;
+
+  const suggestion =
+    err.replacements.length > 0 ? err.replacements[0] : "ไม่มีคำแนะนำ";
+  const wrongText = err.wrong_word || "ข้อความที่ผิด";
+
+  if (suggestion === "ไม่มีคำแนะนำ") return;
+  const textArea = document.getElementById("inputText");
+  textArea.value = textArea.value.replace(wrongText, suggestion);
+
+  // ลบ error ใบนี้ออก
+  currentErrors.splice(index, 1);
+  renderErrors();
+  handleInput();
+}
+
+function acceptAll() {
+  const textArea = document.getElementById("inputText");
+  let newText = textArea.value;
+
+  currentErrors.forEach((err) => {
+    const suggestion = err.replacements.length > 0 ? err.replacements[0] : null;
+    if (suggestion && err.wrong_word) {
+      newText = newText.replace(err.wrong_word, suggestion);
+    }
+  });
+
+  textArea.value = newText;
+  currentErrors = [];
+  renderErrors();
+  handleInput();
+}
+
+// ---------------- UI Helpers ----------------
+
+function handleInput() {
+  const text = document.getElementById("inputText").value;
+  const pasteBtn = document.getElementById("pasteBtn");
+  const copyBtn = document.getElementById("copyBtn");
+
+  if (text.trim() === "") {
+    pasteBtn.style.display = "inline-block";
+    copyBtn.style.display = "none";
+  } else {
+    pasteBtn.style.display = "none";
+    copyBtn.style.display = "inline-block";
+  }
+  updateHighlights();
+}
+
+function handleScroll() {
+  const textarea = document.getElementById("inputText");
+  const backdrop = document.getElementById("backdrop");
+  backdrop.scrollTop = textarea.scrollTop;
+  backdrop.scrollLeft = textarea.scrollLeft;
+}
+
+function updateHighlights() {
+  const text = document.getElementById("inputText").value;
+  // ป้องกัน XSS
+  let escapedText = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  currentErrors.forEach((err) => {
+    const wrongText = err.wrong_word;
+    if (wrongText && escapedText.includes(wrongText)) {
+      escapedText = escapedText.replace(wrongText, `<mark>${wrongText}</mark>`);
+    }
+  });
+
+  // แสดง newline ให้ถูกต้องใน div
+  document.getElementById("backdrop").innerHTML = escapedText + "<br>"; // +br helps scroll match
+}
+
+async function copyText() {
+  const text = document.getElementById("inputText").value;
+  await navigator.clipboard.writeText(text);
+  const copyBtn = document.getElementById("copyBtn");
+  copyBtn.innerText = "✅ Copied!";
+  setTimeout(() => {
+    copyBtn.innerText = "📄 Copy";
+  }, 2000);
+}
+
+async function pasteText() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById("inputText").value = text;
+    handleInput();
+  } catch (err) {
+    alert(
+      "เบราว์เซอร์ไม่รองรับการวางอัตโนมัติ กรุณากด Ctrl+V หรือ Command+V ครับ",
+    );
+  }
 }

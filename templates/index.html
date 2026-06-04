@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Check Web</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js"></script>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeIcon">☀️</button>
+    <h1>📝Grammar Check(TH)</h1>
+    
+    <!-- กล่องสำหรับพิมพ์ข้อความ -->
+    <div class="editor-container">
+        <div class="backdrop" id="backdrop"></div>
+        <textarea id="inputText" placeholder="พิมพ์ประโยคภาษาอังกฤษที่นี่..." oninput="handleInput()" onscroll="handleScroll()"></textarea>
+        
+        <!-- Floating buttons -->
+        <div class="floating-buttons">
+            <button id="pasteBtn" class="icon-btn" onclick="pasteText()" title="วางข้อความ">📋 Paste</button>
+            <button id="copyBtn" class="icon-btn" onclick="copyText()" title="คัดลอกข้อความ" style="display:none;">📄 Copy</button>
+        </div>
+    </div><br>
+    
+    <!-- ปุ่มกด -->
+    <button onclick="checkGrammar()" class="check-btn-v1">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+      ตรวจสอบ Grammar
+    </button>
+
+    <!-- พื้นที่แสดงผลลัพธ์ -->
+    <div id="resultArea" class="result-box" style="display: none;">
+        <h3>คำแปล:</h3>
+        <p id="translationResult"></p>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>✨ คำแนะนำไวยากรณ์:</h3>
+            <button id="acceptAllBtn" class="accept-btn" style="display: none;" onclick="acceptAll()">✅ Accept All</button>
+        </div>
+        <div id="grammarErrorsList" class="cards-container"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <a href="https://github.com/FirstXCH" target="_blank" class="footer-btn">
+            <svg height="20" viewBox="0 0 16 16" width="20" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+            Made by @FirstXCH
+        </a>
+        <div style="margin-top: 15px;">
+            <img src="https://visitor-badge.laobi.icu/badge?page_id=FirstXCH.GrammarCheck" alt="visitors">
+        </div>
+    </div>
+
+</body>
+</html>

@@ -5,8 +5,17 @@ from pydantic import BaseModel
 
 import asyncio
 from googletrans import Translator
-import language_tool_python
+import os
+import json
+from dotenv import load_dotenv
+import google.generativeai as genai
 
+load_dotenv()
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+model = genai.GenerativeModel(
+  model_name="gemini-3.5-flash",
+  generation_config={"response_mime_type": "application/json"}
+)
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -22,14 +31,13 @@ async def get_translation(text):
         result = await translator.translate(text, dest='th')
         return result.text
 
-tool = language_tool_python.LanguageTool('en-US')
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def serve_frontend():
-    return FileResponse("index.html")
+    return FileResponse("templates/index.html")
 
 @app.post("/check-grammar")
 async def check_grammar_and_translate(input_data:TextInput):
@@ -37,16 +45,31 @@ async def check_grammar_and_translate(input_data:TextInput):
 
     translated_text = await get_translation(user_text)
 
-    matches = tool.check(user_text)
+    prompt = f"""
+    คุณคือผู้เชี่ยวชาญด้านไวยากรณ์ภาษาอังกฤษ ตรวจสอบข้อความต่อไปนี้ว่ามีจุดผิดแกรมม่า สะกดคำผิด หรือใช้บริบทผิดหรือไม่
+    ถ้ามี ให้ตอบกลับเป็น JSON format เท่านั้น โดยมีโครงสร้างดังนี้:
+    {{
+        "grammar_errors": [
+            {{
+                "wrong_word": "คำหรือวลีที่ผิด (ยกมาจากประโยคต้นฉบับเป๊ะๆ)",
+                "replacements": ["คำที่ถูกต้องแบบที่ 1", "คำที่ถูกต้องแบบที่ 2"],
+                "message": "อธิบายเหตุผลสั้นๆ เป็นภาษาไทยว่าทำไมถึงผิด"
+            }}
+        ]
+    }}
+    ถ้าไม่มีอะไรผิดเลย ให้ส่งกลับมาแบบนี้: {{"grammar_errors": []}}
+    
+    ข้อความที่ต้องตรวจสอบ: "{user_text}"
+    """
+    
+    try:
+        ai_response = model.generate_content(prompt)
+        result_dict = json.loads(ai_response.text)
+        grammar_errors = result_dict.get("grammar_errors", [])
+    except Exception as e:
+        print(f"Error from Gemini: {e}")
+        grammar_errors = []
 
-    grammar_errors = []
-    for m in matches:
-        grammar_errors.append({
-            "offset": m.offset,
-            "error_length": m.error_length,
-            "replacements": m.replacements,
-            "message": m.message
-        })
     return {
         "original_text": user_text,
         "translated_text": translated_text,
