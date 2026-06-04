@@ -51,6 +51,16 @@
         </a>
         <div id="visitorBadgeContainer" style="margin-top: 15px; min-height: 25px;"></div>
     </div>
-
+    
+    <script>
+        // กรองบอท: โหลดป้ายเฉพาะเบราว์เซอร์จริง (hits.seeyoufarm มีระบบกรอง IP ให้นับแค่ 1 ครั้ง/วัน/คน อยู่แล้ว)
+        setTimeout(() => {
+            const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+            if (!isBot && window.innerWidth > 0) {
+                document.getElementById('visitorBadgeContainer').innerHTML = 
+                    '<img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Ffirstxch-grammarcheck.vercel.app&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=visitors&edge_flat=false" alt="visitors">';
+            }
+        }, 500);
+    </script>
 </body>
 </html>
