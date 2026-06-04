@@ -3,8 +3,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-import asyncio
-from googletrans import Translator
 import os
 import json
 from dotenv import load_dotenv
@@ -25,14 +23,6 @@ class TextInput(BaseModel):
     text: str
 
 
-async def get_translation(text):
-    async with Translator() as translator:
-        # ต้องมีคำว่า await เพื่อรอให้มันแปลเสร็จก่อน
-        result = await translator.translate(text, dest='th')
-        return result.text
-
-
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
@@ -43,12 +33,12 @@ async def serve_frontend():
 async def check_grammar_and_translate(input_data:TextInput):
     user_text = input_data.text
 
-    translated_text = await get_translation(user_text)
-
     prompt = f"""
-    คุณคือผู้เชี่ยวชาญด้านไวยากรณ์ภาษาอังกฤษ ตรวจสอบข้อความต่อไปนี้ว่ามีจุดผิดแกรมม่า สะกดคำผิด หรือใช้บริบทผิดหรือไม่
-    ถ้ามี ให้ตอบกลับเป็น JSON format เท่านั้น โดยมีโครงสร้างดังนี้:
+    คุณคือผู้เชี่ยวชาญด้านภาษาอังกฤษ ตรวจสอบและแปลข้อความต่อไปนี้: "{user_text}"
+    
+    ให้ตอบกลับเป็น JSON format เท่านั้น โดยมีโครงสร้างดังนี้:
     {{
+        "translated_text": "คำแปลภาษาไทยของข้อความข้างต้น",
         "grammar_errors": [
             {{
                 "wrong_word": "คำหรือวลีที่ผิด (ยกมาจากประโยคต้นฉบับเป๊ะๆ)",
@@ -57,18 +47,18 @@ async def check_grammar_and_translate(input_data:TextInput):
             }}
         ]
     }}
-    ถ้าไม่มีอะไรผิดเลย ให้ส่งกลับมาแบบนี้: {{"grammar_errors": []}}
-    
-    ข้อความที่ต้องตรวจสอบ: "{user_text}"
+    ถ้าไม่มีอะไรผิดแกรมม่าเลย ให้ส่วน grammar_errors เป็น [] ว่างๆ
     """
     
     try:
         ai_response = model.generate_content(prompt)
         result_dict = json.loads(ai_response.text)
         grammar_errors = result_dict.get("grammar_errors", [])
+        translated_text = result_dict.get("translated_text", "")
     except Exception as e:
         print(f"Error from Gemini: {e}")
         grammar_errors = []
+        translated_text = "เกิดข้อผิดพลาดในการประมวลผลคำแปล"
 
     return {
         "original_text": user_text,
