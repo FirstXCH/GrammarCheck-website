@@ -43,6 +43,12 @@ async function checkGrammar() {
     currentErrors = data.grammar_errors || [];
     renderErrors();
     updateHighlights();
+    
+    // แสดงป้ายนับการใช้งานเฉพาะเมื่อใช้งานสำเร็จ (ถ้ายังไม่ได้โหลด)
+    const badgeContainer = document.getElementById("visitorBadgeContainer");
+    if (badgeContainer && !badgeContainer.innerHTML.includes("img")) {
+        badgeContainer.innerHTML = '<img src="https://visitor-badge.laobi.icu/badge?page_id=FirstXCH.GrammarCheck" alt="usage count">';
+    }
   } catch (error) {
     alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
     console.error(error);
