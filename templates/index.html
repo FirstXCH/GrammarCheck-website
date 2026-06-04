@@ -49,9 +49,17 @@
             </svg>
             Made by @FirstXCH
         </a>
-        <div style="margin-top: 15px;">
-            <img src="https://visitor-badge.laobi.icu/badge?page_id=FirstXCH.GrammarCheck" alt="visitors">
-        </div>
+        <div id="visitorBadgeContainer" style="margin-top: 15px; min-height: 25px;"></div>
+        <script>
+            // กรองบอท: โหลดป้ายนับคนเข้าชมเฉพาะเมื่อเป็นเบราว์เซอร์จริงๆ (ไม่ใช่ Bot Crawler)
+            setTimeout(() => {
+                const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+                if (!isBot && window.innerWidth > 0) {
+                    document.getElementById('visitorBadgeContainer').innerHTML = 
+                        '<img src="https://visitor-badge.laobi.icu/badge?page_id=FirstXCH.GrammarCheck" alt="visitors">';
+                }
+            }, 500); // หน่วงเวลาเล็กน้อยให้แน่ใจว่าเป็นคนเปิดเว็บ
+        </script>
     </div>
 
 </body>
