@@ -25,8 +25,7 @@ async function checkGrammar() {
   }
 
   document.getElementById("resultArea").style.display = "block";
-  document.getElementById("translationResult").innerText = "กำลังประมวลผล...";
-  document.getElementById("grammarErrorsList").innerHTML = "";
+  document.getElementById("grammarErrorsList").innerHTML = "<div style='text-align: center; padding: 20px; color: #666;'>กำลังประมวลผล...</div>";
   document.getElementById("acceptAllBtn").style.display = "none";
 
   try {
