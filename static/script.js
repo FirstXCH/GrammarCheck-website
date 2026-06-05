@@ -25,7 +25,12 @@ async function checkGrammar() {
   }
 
   document.getElementById("resultArea").style.display = "block";
-  document.getElementById("grammarErrorsList").innerHTML = "<div style='text-align: center; padding: 20px; color: #666;'>กำลังประมวลผล...</div>";
+  document.getElementById("grammarErrorsList").innerHTML = `
+    <div class="loader-container">
+      <div class="spinner"></div>
+      <div class="loader-text">AI กำลังวิเคราะห์ไวยากรณ์...</div>
+    </div>
+  `;
   document.getElementById("acceptAllBtn").style.display = "none";
 
   try {
