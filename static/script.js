@@ -37,8 +37,6 @@ async function checkGrammar() {
     });
 
     const data = await response.json();
-    document.getElementById("translationResult").innerText =
-      data.translated_text;
 
     currentErrors = data.grammar_errors || [];
     renderErrors();

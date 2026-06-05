@@ -8,12 +8,10 @@ import json
 from dotenv import load_dotenv
 import google.generativeai as genai
 
+import google.api_core.exceptions
+
 load_dotenv()
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-model = genai.GenerativeModel(
-  model_name="gemini-3.5-flash",
-  generation_config={"response_mime_type": "application/json"}
-)
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -34,35 +32,52 @@ async def check_grammar_and_translate(input_data:TextInput):
     user_text = input_data.text
 
     prompt = f"""
-    คุณคือผู้เชี่ยวชาญด้านภาษาอังกฤษ ตรวจสอบและแปลข้อความต่อไปนี้: "{user_text}"
+Role: English Grammar Expert.
+Task: Check the given text for grammar, spelling, and contextual errors. Provide brief explanations in English.
+Output: JSON format only.
+{{
+    "grammar_errors": [
+        {{
+            "wrong_word": "exact wrong word from text",
+            "replacements": ["correction1", "correction2"],
+            "message": "brief English explanation"
+        }}
+    ]
+}}
+If no errors, return {{"grammar_errors": []}}
+
+Text: "{user_text}"
+"""
     
-    ให้ตอบกลับเป็น JSON format เท่านั้น โดยมีโครงสร้างดังนี้:
-    {{
-        "translated_text": "คำแปลภาษาไทยของข้อความข้างต้น",
-        "grammar_errors": [
-            {{
-                "wrong_word": "คำหรือวลีที่ผิด (ยกมาจากประโยคต้นฉบับเป๊ะๆ)",
-                "replacements": ["คำที่ถูกต้องแบบที่ 1", "คำที่ถูกต้องแบบที่ 2"],
-                "message": "อธิบายเหตุผลสั้นๆ เป็นภาษาไทยว่าทำไมถึงผิด"
-            }}
-        ]
-    }}
-    ถ้าไม่มีอะไรผิดแกรมม่าเลย ให้ส่วน grammar_errors เป็น [] ว่างๆ
-    """
+    MODELS_TO_TRY = [
+        "gemini-3.5-flash",
+        "gemini-2.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-flash-lite",
+        "gemini-3-flash"
+    ]
+
+    grammar_errors = []
     
-    try:
-        ai_response = model.generate_content(prompt)
-        result_dict = json.loads(ai_response.text)
-        grammar_errors = result_dict.get("grammar_errors", [])
-        translated_text = result_dict.get("translated_text", "")
-    except Exception as e:
-        print(f"Error from Gemini: {e}")
-        grammar_errors = []
-        translated_text = "เกิดข้อผิดพลาดในการประมวลผลคำแปล"
+    for model_name in MODELS_TO_TRY:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            ai_response = model.generate_content(prompt)
+            result_dict = json.loads(ai_response.text)
+            grammar_errors = result_dict.get("grammar_errors", [])
+            break
+        except google.api_core.exceptions.ResourceExhausted:
+            print(f"Model {model_name} hit 429 Limit. Falling back...")
+            continue
+        except Exception as e:
+            print(f"Error with model {model_name}: {e}")
+            continue
 
     return {
         "original_text": user_text,
-        "translated_text": translated_text,
         "grammar_errors": grammar_errors
     }
 
