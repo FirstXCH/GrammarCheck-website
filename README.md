@@ -1,6 +1,7 @@
 # 📝 GrammarCheck-website
 
 เป็นโปรเจกต์แรกที่ผมทำขึ้นมาเพราะ ผมกำลังเรียนภาษาอังกฤษไปด้วยเป็นเว็บพิมพ์ประโยคตรวจสอบแกรมม่าโดย AI และ ผมพึ่งลองเรียนภาษา python แล้วอยากนำ api มาใช้สร้างเว็บด้วย
+21/08/2026 ลบ api ออกแล้ว
 
 <div align="center">
   <img width="800" alt="Grammar Check Web Screenshot" src="https://github.com/user-attachments/assets/fcb72789-8287-4714-b52c-af1766ee8ad3" />
